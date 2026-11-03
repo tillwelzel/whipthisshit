@@ -31,11 +31,15 @@ npm install --no-fund --no-audit
 # Some npm setups block Electron's postinstall, leaving no binary. Fix that.
 ELECTRON_DIR="$APP_DIR/node_modules/electron"
 if [ "$(uname)" = "Darwin" ]; then ELECTRON_BIN="$ELECTRON_DIR/dist/Electron.app/Contents/MacOS/Electron"; else ELECTRON_BIN="$ELECTRON_DIR/dist/electron"; fi
-if [ ! -x "$ELECTRON_BIN" ]; then
+# Electron writes path.txt only after a complete extraction; a bare binary
+# without it means a half-extracted app that crashes on launch.
+electron_ok() { [ -x "$ELECTRON_BIN" ] && [ -f "$ELECTRON_DIR/path.txt" ]; }
+if ! electron_ok; then
   echo "▸ Electron binary missing, downloading…"
+  rm -rf "$ELECTRON_DIR/dist" "$ELECTRON_DIR/path.txt"
   node "$ELECTRON_DIR/install.js" || true
 fi
-if [ ! -x "$ELECTRON_BIN" ] && [ "$(uname)" = "Darwin" ]; then
+if ! electron_ok && [ "$(uname)" = "Darwin" ]; then
   ZIP="$(ls "$HOME"/Library/Caches/electron/*/electron-v*-darwin-*.zip 2>/dev/null | head -1)"
   if [ -n "$ZIP" ]; then
     echo "▸ Extracting cached Electron zip…"
@@ -44,7 +48,7 @@ if [ ! -x "$ELECTRON_BIN" ] && [ "$(uname)" = "Darwin" ]; then
     printf 'Electron.app/Contents/MacOS/Electron' > "$ELECTRON_DIR/path.txt"
   fi
 fi
-[ -x "$ELECTRON_BIN" ] || { echo "Could not get an Electron binary. Try: rm -rf node_modules && ./install.sh" >&2; exit 1; }
+electron_ok || { echo "Could not get an Electron binary. Try: rm -rf node_modules && ./install.sh" >&2; exit 1; }
 
 echo "▸ Linking the whipthisshit command into $BIN_DIR"
 mkdir -p "$BIN_DIR"
