@@ -1,0 +1,76 @@
+#!/bin/bash
+# whipthisshit — start / toggle / stop the whip overlay (animation + sound only).
+# Lives in the repo; `install.sh` symlinks it into ~/.local/bin.
+
+# Resolve the real location of this script (follow symlinks) → repo root.
+SCRIPT="$0"
+while [ -L "$SCRIPT" ]; do
+  DIR="$(cd "$(dirname "$SCRIPT")" && pwd)"
+  SCRIPT="$(readlink "$SCRIPT")"
+  [[ "$SCRIPT" != /* ]] && SCRIPT="$DIR/$SCRIPT"
+done
+APP_DIR="$(cd "$(dirname "$SCRIPT")/.." && pwd)"
+
+ELECTRON_APP="$APP_DIR/node_modules/electron/dist/Electron.app"
+ELECTRON="$ELECTRON_APP/Contents/MacOS/Electron"
+if [ ! -x "$ELECTRON" ]; then
+  # Linux layout
+  ELECTRON="$APP_DIR/node_modules/electron/dist/electron"
+fi
+
+is_running() { pgrep -f "^$ELECTRON" >/dev/null 2>&1; }
+
+need_electron() {
+  if [ ! -x "$ELECTRON" ]; then
+    echo "Electron binary missing. Run:  cd \"$APP_DIR\" && ./install.sh" >&2
+    exit 1
+  fi
+}
+
+launch() {  # $1 = optional extra arg for the app (e.g. --whip)
+  need_electron
+  if [ "$(uname)" = "Darwin" ]; then
+    # `open` hands the launch to launchd, so the app survives whoever started
+    # it (a terminal, an Automator service, a hotkey) going away. -g: don't steal focus.
+    open -n -g -a "$ELECTRON_APP" --args "$APP_DIR" $1
+  else
+    nohup "$ELECTRON" "$APP_DIR" $1 >/dev/null 2>&1 &
+    disown
+  fi
+}
+
+signal_running() {  # $1 = arg; a second instance just forwards it to the running app and exits
+  (cd "$APP_DIR" && "$ELECTRON" "$APP_DIR" $1 >/dev/null 2>&1)
+}
+
+do_stop() {
+  if is_running; then
+    signal_running --quit        # running app drops the whip, then exits
+    for _ in 1 2 3 4 5 6 7 8 9 10; do is_running || break; sleep 0.3; done
+    is_running && pkill -f "^$ELECTRON"
+    echo "whipthisshit stopped."
+  else
+    echo "whipthisshit is not running."
+  fi
+}
+
+case "${1:-start}" in
+  start)
+    if is_running; then
+      signal_running
+      echo "🔥 whip!"
+    else
+      launch
+      echo "🔥 whipthisshit started. Click the whip icon in your menu bar, press ⌃⌥⌘2, or run whipthisshit again."
+    fi
+    ;;
+  toggle)   # ⌃⌥⌘1: not running → start with whip in hand; running → drop + quit
+    if is_running; then do_stop; else launch --whip; echo "🔥 whip!"; fi
+    ;;
+  stop)   do_stop ;;
+  status) if is_running; then echo "running"; else echo "not running"; fi ;;
+  *)
+    echo "usage: whipthisshit [start|toggle|stop|status]"
+    exit 1
+    ;;
+esac

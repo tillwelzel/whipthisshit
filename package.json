@@ -1,12 +1,11 @@
 {
-  "name": "openwhip",
-  "version": "1.1.0",
-  "description": "Whip Claude into shape",
+  "name": "whipthisshit",
+  "version": "2.0.0",
+  "description": "Whip Claude into shape \u2013 animation + sound only. Sends no keystrokes, never interrupts your terminal.",
   "license": "MIT",
   "main": "main.js",
   "bin": {
-    "openwhip": "bin/openwhip.js",
-    "badclaude": "bin/openwhip.js"
+    "whipthisshit": "bin/whipthisshit"
   },
   "os": [
     "darwin",
@@ -20,33 +19,36 @@
     "electron",
     "tray",
     "overlay",
-    "cli"
+    "whip",
+    "claude",
+    "menubar"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GitFrog1111/OpenWhip.git"
+    "url": "git+https://github.com/tillwelzel/whipthisshit.git"
   },
   "bugs": {
-    "url": "https://github.com/GitFrog1111/OpenWhip/issues"
+    "url": "https://github.com/tillwelzel/whipthisshit/issues"
   },
-  "homepage": "https://github.com/GitFrog1111/OpenWhip#readme",
+  "homepage": "https://github.com/tillwelzel/whipthisshit#readme",
   "files": [
     "main.js",
     "preload.js",
     "overlay.html",
     "sounds",
     "icon",
-    "bin/openwhip.js",
-    "bin/badclaude.js",
-    "README.md"
+    "bin/whipthisshit",
+    "macos",
+    "install.sh",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "pack": "npm pack"
+    "install-hotkey": "./install.sh"
   },
   "dependencies": {
-    "electron": "^33.0.0",
-    "koffi": "^2.9.0"
+    "electron": "^33.0.0"
   }
 }

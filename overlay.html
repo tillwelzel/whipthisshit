@@ -51,7 +51,7 @@ const P = {
   // Crack detection
   crackSpeed:     340,     // tip velocity threshold to trigger crack
   crackCooldownMs:200,   // min ms between cracks
-  firstCrackGraceMs: 350, // no crack (macro) until this long after spawn
+  firstCrackGraceMs: 350, // no crack sound until this long after spawn
 
   // Visuals
   lineWidthHandle: 7,      // rope thickness near handle
@@ -362,7 +362,6 @@ function update() {
     if (now - whipSpawnTime >= P.firstCrackGraceMs && now - lastCrackTime > P.crackCooldownMs) {
       lastCrackTime = now;
       playCrackSound();
-      window.bridge.whipCrack();
     }
   }
 
